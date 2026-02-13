@@ -50,7 +50,7 @@
           <div class="file-preview">
             <img
               v-if="isImage(file.mime_type)"
-              :src="file.url"
+              :src="file.download_url || file.url"
               :alt="file.name"
               class="file-image"
             />
@@ -207,8 +207,9 @@ const deleteFile = async (file: MediaFile) => {
 }
 
 const downloadFile = (file: MediaFile) => {
-  if (file.url) {
-    window.open(file.url, '_blank')
+  const downloadUrl = file.download_url || file.url
+  if (downloadUrl) {
+    window.open(downloadUrl, '_blank')
   }
 }
 

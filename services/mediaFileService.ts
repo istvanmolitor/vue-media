@@ -28,6 +28,7 @@ export interface MediaFile {
   filename: string
   path: string
   url?: string
+  download_url?: string
   mime_type: string
   size: number
   folder_id?: number | null
