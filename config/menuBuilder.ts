@@ -1,11 +1,11 @@
-import type { MenuBuilder, MenuItemConfig } from '@menu/index'
+import { MenuBuilder, type MenuItemConfig } from '@menu/types/menu'
 import { FolderOpen, Image, Folders } from 'lucide-vue-next'
 
 /**
  * Media Menu Builder
  * Builds the media management menu structure
  */
-export class MediaMenuBuilder implements MenuBuilder {
+export class MediaMenuBuilder extends MenuBuilder {
   build(menu: MenuItemConfig, menuName: string): MenuItemConfig {
     // Only add to admin menu
     if (menuName !== 'admin') {
@@ -44,18 +44,7 @@ export class MediaMenuBuilder implements MenuBuilder {
       ]
     }
 
-    // Add to menu children
-    if (!menu.children) {
-      menu.children = []
-    }
-    menu.children.push(mediaItem)
-
-    // Sort children by order
-    menu.children.sort((a, b) => {
-      const orderA = a.order ?? Number.MAX_SAFE_INTEGER
-      const orderB = b.order ?? Number.MAX_SAFE_INTEGER
-      return orderA - orderB
-    })
+    this.addMenuItem(menu, mediaItem)
 
     return menu
   }
