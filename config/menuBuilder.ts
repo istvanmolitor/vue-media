@@ -26,22 +26,6 @@ export class MediaMenuBuilder extends MenuBuilder {
       path: '/media',
       icon: FolderOpen,
       order: 50,
-      children: [
-        {
-          id: 'media-files',
-          title: 'Fájlok',
-          path: '/media',
-          icon: Image,
-          order: 10
-        },
-        {
-          id: 'media-folders',
-          title: 'Mappák',
-          path: '/media/folders',
-          icon: Folders,
-          order: 20
-        }
-      ]
     }
 
     this.addMenuItem(menu, mediaItem)
