@@ -9,6 +9,7 @@ export const mediaRoutes: RouteRecordRaw[] = [
     meta: {
       title: 'Media Files',
       requiresAuth: true,
+      noPadding: true,
     },
   },
 ]
