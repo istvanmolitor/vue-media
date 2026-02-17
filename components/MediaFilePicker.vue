@@ -27,6 +27,8 @@ const currentFolderId = ref<number | null>(null)
 const loading = ref(false)
 const searchQuery = ref('')
 const selectedFile = ref<MediaFile | null>(null)
+const uploading = ref(false)
+const uploadProgress = ref(0)
 
 const filteredFiles = computed(() => {
   let result = files.value
@@ -130,6 +132,45 @@ const formatFileSize = (bytes: number) => {
   const i = Math.floor(Math.log(bytes) / Math.log(k))
   return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
 }
+
+const handleFileUpload = async (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
+
+  // Check if file type is allowed
+  if (props.acceptTypes.length > 0) {
+    const isAllowed = props.acceptTypes.some(type => {
+      if (type.endsWith('/*')) {
+        const baseType = type.split('/')[0]
+        return file.type.startsWith(baseType + '/')
+      }
+      return file.type === type
+    })
+
+    if (!isAllowed) {
+      alert('Ez a fájltípus nem támogatott.')
+      target.value = ''
+      return
+    }
+  }
+
+  uploading.value = true
+  uploadProgress.value = 0
+
+  try {
+    const response = await mediaFileService.upload(file, currentFolderId.value)
+    files.value.unshift(response.data.data)
+    alert('Fájl sikeresen feltöltve!')
+    target.value = ''
+  } catch (error) {
+    console.error('Failed to upload file:', error)
+    alert('Hiba történt a feltöltés során.')
+  } finally {
+    uploading.value = false
+    uploadProgress.value = 0
+  }
+}
 </script>
 
 <template>
@@ -179,6 +220,18 @@ const formatFileSize = (bytes: number) => {
                   placeholder="Keresés..."
                   class="search-input"
                 />
+              </div>
+              <div class="upload-section">
+                <label class="btn-upload" :class="{ disabled: uploading }">
+                  <input
+                    type="file"
+                    @change="handleFileUpload"
+                    :disabled="uploading"
+                    :accept="acceptTypes.join(',')"
+                    class="file-input-hidden"
+                  />
+                  {{ uploading ? 'Feltöltés...' : '📤 Új fájl feltöltése' }}
+                </label>
               </div>
               <div class="folder-navigation">
                 <button
@@ -351,6 +404,36 @@ const formatFileSize = (bytes: number) => {
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.upload-section {
+  width: 100%;
+}
+
+.btn-upload {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: #10b981;
+  color: white;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn-upload:hover:not(.disabled) {
+  background: #059669;
+}
+
+.btn-upload.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.file-input-hidden {
+  display: none;
 }
 
 .folder-navigation {
