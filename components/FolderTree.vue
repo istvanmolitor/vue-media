@@ -40,7 +40,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import Button from '@admin/components/ui/Button.vue'
+import Button from '@admin/components/ui/button/Button.vue'
 import Icon from '@admin/components/ui/Icon.vue'
 import type { MediaFolder } from '../services/mediaFolderService'
 

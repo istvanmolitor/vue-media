@@ -102,12 +102,12 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import AdminLayout from '@admin/components/layout/DashboardLayout.vue'
-import Button from '@admin/components/ui/Button.vue'
+import Button from '@admin/components/ui/button/Button.vue'
 import Icon from '@admin/components/ui/Icon.vue'
 import Input from '@admin/components/ui/Input.vue'
 import Label from '@admin/components/ui/Label.vue'
 import Textarea from '@admin/components/ui/Textarea.vue'
-import FormButtons from '@admin/components/ui/FormButtons.vue'
+import FormButtons from '@admin/components/ui/button/FormButtons.vue'
 import DataTable, { type Column } from '@admin/components/DataTable.vue'
 import { mediaFolderService, type MediaFolder, type MediaFolderFormData } from '../services/mediaFolderService'
 
