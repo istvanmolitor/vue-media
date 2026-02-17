@@ -41,6 +41,7 @@
               :key="file.id"
               class="file-card"
             >
+              <FileInfoButton :file="file" @show-info="showFileInfo" />
               <div class="file-preview">
                 <img
                   v-if="isImage(file.mime_type)"
@@ -74,27 +75,57 @@
     <div v-if="showUploadDialog" class="modal-overlay" @click="showUploadDialog = false">
       <div class="modal-content" @click.stop>
         <h3>Fájl Feltöltése</h3>
-        <form @submit.prevent="uploadFile">
+        <form @submit.prevent="uploadFiles">
           <div class="form-group">
-            <Label>Fájl</Label>
+            <Label>Fájlok</Label>
             <input
               type="file"
               @change="handleFileSelect"
               required
               class="form-control"
+              multiple
             />
+            <div v-if="selectedFiles.length > 0" class="selected-files-list">
+              <div v-for="(file, index) in selectedFiles" :key="index" class="selected-file-item">
+                <span class="file-name">{{ file.name }}</span>
+                <span class="file-size">{{ formatFileSize(file.size) }}</span>
+                <button type="button" @click="removeFile(index)" class="btn-remove">×</button>
+              </div>
+            </div>
           </div>
           <div class="form-group">
             <Label>Leírás</Label>
             <Textarea
               v-model="uploadDescription"
-              placeholder="Opcionális leírás"
+              placeholder="Opcionális leírás (az összes fájlhoz)"
               :rows="3"
             />
           </div>
+
+          <!-- Progress bars -->
+          <div v-if="uploading && uploadProgress.length > 0" class="upload-progress-container">
+            <div v-for="(progress, index) in uploadProgress" :key="index" class="progress-item">
+              <div class="progress-header">
+                <span class="progress-filename">{{ progress.filename }}</span>
+                <span class="progress-percentage">{{ progress.percentage }}%</span>
+              </div>
+              <div class="progress-bar">
+                <div
+                  class="progress-fill"
+                  :style="{ width: progress.percentage + '%' }"
+                  :class="{
+                    'progress-complete': progress.percentage === 100,
+                    'progress-error': progress.error
+                  }"
+                ></div>
+              </div>
+              <div v-if="progress.error" class="progress-error-message">{{ progress.error }}</div>
+            </div>
+          </div>
+
           <FormButtons
             :is-saving="uploading"
-            @cancel="showUploadDialog = false"
+            @cancel="cancelUpload"
           />
         </form>
       </div>
@@ -170,6 +201,9 @@
       variant="destructive"
       @confirm="deleteFolder"
     />
+
+    <!-- File Info Modal -->
+    <FileInfoModal v-model="showFileInfoDialog" :file="fileInfoToShow" />
   </AdminLayout>
 </template>
 
@@ -183,6 +217,8 @@ import Label from '@admin/components/ui/Label.vue'
 import Textarea from '@admin/components/ui/Textarea.vue'
 import FormButtons from '@admin/components/ui/button/FormButtons.vue'
 import FolderTree from '../components/FolderTree.vue'
+import FileInfoButton from '../components/FileInfoButton.vue'
+import FileInfoModal from '../components/FileInfoModal.vue'
 import { mediaFileService, type MediaFile } from '../services/mediaFileService'
 import { mediaFolderService, type MediaFolder, type MediaFolderFormData } from '../services/mediaFolderService'
 
@@ -191,13 +227,22 @@ const folders = ref<MediaFolder[]>([])
 const loading = ref(false)
 const foldersLoading = ref(false)
 const showUploadDialog = ref(false)
-const selectedFile = ref<File | null>(null)
+const selectedFiles = ref<File[]>([])
 const uploadDescription = ref('')
 const uploading = ref(false)
 const currentFolderId = ref<number | null>(null)
 const currentFolderName = ref('')
 const showDeleteDialog = ref(false)
 const fileToDelete = ref<MediaFile | null>(null)
+const showFileInfoDialog = ref(false)
+const fileInfoToShow = ref<MediaFile | null>(null)
+
+interface UploadProgress {
+  filename: string
+  percentage: number
+  error?: string
+}
+const uploadProgress = ref<UploadProgress[]>([])
 const showCreateFolderDialog = ref(false)
 const showEditFolderDialog = ref(false)
 const showDeleteFolderDialog = ref(false)
@@ -251,29 +296,80 @@ const navigateToFolder = async (folderId: number | null) => {
 const handleFileSelect = (event: Event) => {
   const target = event.target as HTMLInputElement
   if (target.files && target.files.length > 0) {
-    selectedFile.value = target.files[0] ?? null
+    selectedFiles.value = Array.from(target.files)
   }
 }
 
-const uploadFile = async () => {
-  if (!selectedFile.value) return
+const removeFile = (index: number) => {
+  selectedFiles.value.splice(index, 1)
+}
+
+const uploadFiles = async () => {
+  if (selectedFiles.value.length === 0) return
 
   uploading.value = true
+  uploadProgress.value = selectedFiles.value.map(file => ({
+    filename: file.name,
+    percentage: 0
+  }))
+
   try {
-    await mediaFileService.upload(
-      selectedFile.value,
-      currentFolderId.value,
-      uploadDescription.value
-    )
+    // Upload files sequentially to track individual progress
+    for (let i = 0; i < selectedFiles.value.length; i++) {
+      const file = selectedFiles.value[i]
+      if (!file) continue
+
+      const progressItem = uploadProgress.value[i]
+      if (!progressItem) continue
+
+      try {
+        progressItem.percentage = 0
+
+        // Simulate progress (you can enhance this with actual XHR progress events)
+        const progressInterval = setInterval(() => {
+          const item = uploadProgress.value[i]
+          if (item && item.percentage < 90) {
+            item.percentage += 10
+          }
+        }, 100)
+
+        await mediaFileService.upload(
+          file,
+          currentFolderId.value,
+          uploadDescription.value
+        )
+
+        clearInterval(progressInterval)
+        progressItem.percentage = 100
+      } catch (error) {
+        console.error(`Failed to upload file ${file.name}:`, error)
+        progressItem.error = 'Feltöltési hiba'
+        progressItem.percentage = 0
+      }
+    }
+
+    // Wait a bit to show completion
+    await new Promise(resolve => setTimeout(resolve, 500))
+
     showUploadDialog.value = false
-    selectedFile.value = null
+    selectedFiles.value = []
     uploadDescription.value = ''
+    uploadProgress.value = []
     await loadFiles()
   } catch (error) {
-    console.error('Failed to upload file:', error)
-    alert('Failed to upload file')
+    console.error('Failed to upload files:', error)
+    alert('Hiba történt a feltöltés során')
   } finally {
     uploading.value = false
+  }
+}
+
+const cancelUpload = () => {
+  if (!uploading.value) {
+    showUploadDialog.value = false
+    selectedFiles.value = []
+    uploadDescription.value = ''
+    uploadProgress.value = []
   }
 }
 
@@ -382,6 +478,11 @@ const formatFileSize = (bytes: number): string => {
   return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
 }
 
+const showFileInfo = (file: MediaFile) => {
+  fileInfoToShow.value = file
+  showFileInfoDialog.value = true
+}
+
 onMounted(() => {
   loadFiles()
   loadFolders()
@@ -450,6 +551,7 @@ onMounted(() => {
   border-radius: 8px;
   overflow: hidden;
   transition: box-shadow 0.2s;
+  position: relative;
 }
 
 .file-card:hover {
@@ -596,5 +698,128 @@ onMounted(() => {
 
 .btn-secondary:hover {
   background: #e5e5e5;
+}
+
+.selected-files-list {
+  margin-top: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.selected-file-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: #f9fafb;
+  border-radius: 4px;
+  margin-bottom: 4px;
+}
+
+.selected-file-item:last-child {
+  margin-bottom: 0;
+}
+
+.selected-file-item .file-name {
+  flex: 1;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.selected-file-item .file-size {
+  font-size: 12px;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+.selected-file-item .btn-remove {
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  padding: 0;
+}
+
+.selected-file-item .btn-remove:hover {
+  background: #dc2626;
+}
+
+.upload-progress-container {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.progress-item {
+  margin-bottom: 16px;
+}
+
+.progress-item:last-child {
+  margin-bottom: 0;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.progress-filename {
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  margin-right: 12px;
+}
+
+.progress-percentage {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0066cc;
+  white-space: nowrap;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #0066cc;
+  transition: width 0.3s ease;
+  border-radius: 4px;
+}
+
+.progress-fill.progress-complete {
+  background: #10b981;
+}
+
+.progress-fill.progress-error {
+  background: #ef4444;
+}
+
+.progress-error-message {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #ef4444;
 }
 </style>

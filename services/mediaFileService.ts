@@ -14,6 +14,8 @@ export interface MediaFile {
   folder_id?: number | null
   user_id?: number | null
   description?: string | null
+  width?: number | null
+  height?: number | null
   created_at?: string
   updated_at?: string
 }
