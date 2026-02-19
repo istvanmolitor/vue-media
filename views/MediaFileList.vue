@@ -209,7 +209,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import AdminLayout from '@admin/components/layout/DashboardLayout.vue'
+import AdminLayout from '@admin/components/layout/AdminLayout.vue'
 import Icon from '@admin/components/ui/Icon.vue'
 import ConfirmDialog from '@admin/components/ui/ConfirmDialog.vue'
 import Input from '@admin/components/ui/Input.vue'

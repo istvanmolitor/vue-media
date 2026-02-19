@@ -101,7 +101,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import AdminLayout from '@admin/components/layout/DashboardLayout.vue'
+import AdminLayout from '@admin/components/layout/AdminLayout.vue'
 import Button from '@admin/components/ui/button/Button.vue'
 import Icon from '@admin/components/ui/Icon.vue'
 import Input from '@admin/components/ui/Input.vue'
