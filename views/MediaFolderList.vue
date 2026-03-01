@@ -1,5 +1,5 @@
 <template>
-  <AdminLayout>
+  <AdminLayout pageTitle="Média Mappák">
     <div class="media-folders-container">
       <div class="header">
         <h2 class="text-3xl font-bold tracking-tight">Média Mappák</h2>
@@ -108,7 +108,7 @@ import Input from '@admin/components/ui/Input.vue'
 import Label from '@admin/components/ui/Label.vue'
 import Textarea from '@admin/components/ui/Textarea.vue'
 import FormButtons from '@admin/components/ui/button/FormButtons.vue'
-import DataTable, { type Column } from '@admin/components/DataTable.vue'
+import DataTable, { type Column } from '@admin/components/ui/dataTable/DataTable.vue'
 import { mediaFolderService, type MediaFolder, type MediaFolderFormData } from '../services/mediaFolderService'
 
 const folders = ref<MediaFolder[]>([])

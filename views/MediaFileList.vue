@@ -1,5 +1,5 @@
 <template>
-  <AdminLayout>
+  <AdminLayout pageTitle="Média">
     <div class="media-container">
       <!-- Left Sidebar - Folder Tree -->
       <div class="sidebar">
@@ -181,26 +181,30 @@
     </div>
 
     <!-- Delete Confirmation Dialog -->
-    <ConfirmDialog
-      v-model:open="showDeleteDialog"
+    <Modal
+      :show="showDeleteDialog"
       :title="`Biztosan törölni szeretné a '${fileToDelete?.name}' fájlt?`"
-      description="Ez a művelet nem vonható vissza. A fájl véglegesen törlődik."
-      confirmLabel="Törlés"
-      cancelLabel="Mégse"
-      variant="destructive"
-      @confirm="deleteFile"
-    />
+      @close="showDeleteDialog = false"
+    >
+      <p class="text-sm text-muted-foreground">Ez a művelet nem vonható vissza. A fájl véglegesen törlődik.</p>
+      <template #footer>
+        <Button variant="destructive" @click="deleteFile">Törlés</Button>
+        <Button variant="outline" @click="showDeleteDialog = false">Mégse</Button>
+      </template>
+    </Modal>
 
     <!-- Delete Folder Confirmation Dialog -->
-    <ConfirmDialog
-      v-model:open="showDeleteFolderDialog"
+    <Modal
+      :show="showDeleteFolderDialog"
       :title="`Biztosan törölni szeretné a '${folderToDelete?.name}' mappát?`"
-      description="Ez a művelet nem vonható vissza. A mappa és a benne lévő összes fájl véglegesen törlődik."
-      confirmLabel="Törlés"
-      cancelLabel="Mégse"
-      variant="destructive"
-      @confirm="deleteFolder"
-    />
+      @close="showDeleteFolderDialog = false"
+    >
+      <p class="text-sm text-muted-foreground">Ez a művelet nem vonható vissza. A mappa és a benne lévő összes fájl véglegesen törlődik.</p>
+      <template #footer>
+        <Button variant="destructive" @click="deleteFolder">Törlés</Button>
+        <Button variant="outline" @click="showDeleteFolderDialog = false">Mégse</Button>
+      </template>
+    </Modal>
 
     <!-- File Info Modal -->
     <FileInfoModal v-model="showFileInfoDialog" :file="fileInfoToShow" />
@@ -211,7 +215,8 @@
 import { ref, onMounted } from 'vue'
 import AdminLayout from '@admin/components/layout/AdminLayout.vue'
 import Icon from '@admin/components/ui/Icon.vue'
-import ConfirmDialog from '@admin/components/ui/ConfirmDialog.vue'
+import Modal from '@admin/components/ui/Modal.vue'
+import Button from '@admin/components/ui/button/Button.vue'
 import Input from '@admin/components/ui/Input.vue'
 import Label from '@admin/components/ui/Label.vue'
 import Textarea from '@admin/components/ui/Textarea.vue'

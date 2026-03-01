@@ -1,5 +1,5 @@
 import { MenuBuilder, type MenuItemConfig } from '@menu/types/menu'
-import { FolderOpen, Image, Folders } from 'lucide-vue-next'
+import { FolderOpen } from 'lucide-vue-next'
 
 /**
  * Media Menu Builder
