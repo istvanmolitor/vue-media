@@ -1,8 +1,7 @@
 <template>
   <AdminLayout pageTitle="Média Mappák">
     <div class="media-folders-container">
-      <div class="header">
-        <h2 class="text-3xl font-bold tracking-tight">Média Mappák</h2>
+      <div class="flex items-center justify-end space-y-2 mb-4">
         <div class="actions">
           <Button @click="showCreateDialog = true">
             <Icon name="plus" :size="16" class="mr-2" />
