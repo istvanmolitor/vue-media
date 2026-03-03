@@ -15,7 +15,6 @@
         :columns="columns"
         :data="folders"
         :loading="isLoading"
-        :searchable="true"
         search-placeholder="Keresés név alapján..."
         default-sort="name"
         default-direction="asc"
@@ -27,10 +26,8 @@
         </template>
 
         <template #row-actions="{ row }">
-          <div class="flex items-center justify-end gap-2">
-            <Button variant="ghost" size="sm" @click="editFolder(row)">Szerkesztés</Button>
-            <Button variant="destructive" size="sm" @click="deleteFolder(row.id!)">Törlés</Button>
-          </div>
+          <EditButton @click="editFolder(row)" />
+          <DeleteButton @confirm="deleteFolder(row.id!)" />
         </template>
 
         <template #empty>
@@ -100,13 +97,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import AdminLayout from '@admin/components/layout/AdminLayout.vue'
-import Button from '@admin/components/ui/button/Button.vue'
-import Icon from '@admin/components/ui/Icon.vue'
-import Input from '@admin/components/ui/Input.vue'
-import Label from '@admin/components/ui/Label.vue'
-import Textarea from '@admin/components/ui/Textarea.vue'
-import FormButtons from '@admin/components/ui/button/FormButtons.vue'
+import { AdminLayout, Button, Icon, Input, Label, Textarea, FormButtons, EditButton, DeleteButton } from '@admin'
 import DataTable, { type Column } from '@admin/components/ui/dataTable/DataTable.vue'
 import { mediaFolderService, type MediaFolder, type MediaFolderFormData } from '../services/mediaFolderService'
 
