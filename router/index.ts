@@ -3,7 +3,7 @@ import MediaFileList from '../views/MediaFileList.vue'
 
 export const mediaRoutes: RouteRecordRaw[] = [
   {
-    path: '/media',
+    path: '/admin/media',
     name: 'media',
     component: MediaFileList,
     meta: {

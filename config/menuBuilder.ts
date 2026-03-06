@@ -1,4 +1,4 @@
-import { MenuBuilder, type MenuItemConfig } from '@menu/types/menu'
+import { MenuBuilder, type MenuItemConfig } from '@menu/index'
 import { FolderOpen } from 'lucide-vue-next'
 
 /**
@@ -23,7 +23,7 @@ export class MediaMenuBuilder extends MenuBuilder {
     const mediaItem: MenuItemConfig = {
       id: 'media-management',
       title: 'Média',
-      path: '/media',
+      path: '/admin/media',
       icon: FolderOpen,
       order: 50,
     }
