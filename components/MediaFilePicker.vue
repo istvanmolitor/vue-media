@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import Icon from '@admin/components/ui/Icon.vue'
 import { mediaFileService, type MediaFile } from '../services/mediaFileService'
 import { mediaFolderService, type MediaFolder } from '../services/mediaFolderService'
+import { formatFileSize, isImage, getFileIcon } from '../utils/mediaUtils'
 import FileInfoButton from './FileInfoButton.vue'
 import FileInfoModal from './FileInfoModal.vue'
+import UploadFile from './UploadFile.vue'
 
 interface Props {
   modelValue?: string
@@ -29,18 +32,9 @@ const currentFolderId = ref<number | null>(null)
 const loading = ref(false)
 const searchQuery = ref('')
 const selectedFile = ref<MediaFile | null>(null)
-const uploading = ref(false)
-const selectedUploadFiles = ref<File[]>([])
 const showUploadDialog = ref(false)
 const showFileInfoDialog = ref(false)
 const fileInfoToShow = ref<MediaFile | null>(null)
-
-interface UploadProgress {
-  filename: string
-  percentage: number
-  error?: string
-}
-const uploadProgress = ref<UploadProgress[]>([])
 
 const filteredFiles = computed(() => {
   let result = files.value
@@ -125,136 +119,8 @@ const cancelSelection = () => {
   searchQuery.value = ''
 }
 
-const isImage = (mimeType: string) => {
-  return mimeType.startsWith('image/')
-}
-
-const getFileIcon = (mimeType: string) => {
-  if (mimeType.startsWith('image/')) return '🖼️'
-  if (mimeType.startsWith('video/')) return '🎥'
-  if (mimeType.startsWith('audio/')) return '🎵'
-  if (mimeType.includes('pdf')) return '📄'
-  return '📎'
-}
-
-const formatFileSize = (bytes: number) => {
-  if (bytes === 0) return '0 B'
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
-}
-
-const handleFileUpload = async (event: Event) => {
-  const target = event.target as HTMLInputElement
-  const fileList = target.files
-  if (!fileList || fileList.length === 0) return
-
-  const filesToUpload: File[] = []
-
-  // Check if file types are allowed
-  for (let i = 0; i < fileList.length; i++) {
-    const file = fileList[i]
-    if (!file) continue
-
-    if (props.acceptTypes.length > 0) {
-      const isAllowed = props.acceptTypes.some(type => {
-        if (type.endsWith('/*')) {
-          const baseType = type.split('/')[0]
-          return file.type.startsWith(baseType + '/')
-        }
-        return file.type === type
-      })
-
-      if (!isAllowed) {
-        alert(`A fájl "${file.name}" típusa nem támogatott.`)
-        continue
-      }
-    }
-
-    filesToUpload.push(file)
-  }
-
-  if (filesToUpload.length === 0) {
-    target.value = ''
-    return
-  }
-
-  selectedUploadFiles.value = filesToUpload
-  showUploadDialog.value = true
-  target.value = ''
-}
-
-const removeUploadFile = (index: number) => {
-  selectedUploadFiles.value.splice(index, 1)
-}
-
-const uploadFiles = async () => {
-  if (selectedUploadFiles.value.length === 0) return
-
-  uploading.value = true
-  uploadProgress.value = selectedUploadFiles.value.map(file => ({
-    filename: file.name,
-    percentage: 0
-  }))
-
-  try {
-    // Upload files sequentially to track individual progress
-    for (let i = 0; i < selectedUploadFiles.value.length; i++) {
-      const file = selectedUploadFiles.value[i]
-      if (!file) continue
-
-      const progressItem = uploadProgress.value[i]
-      if (!progressItem) continue
-
-      try {
-        progressItem.percentage = 0
-
-        // Simulate progress
-        const progressInterval = setInterval(() => {
-          const item = uploadProgress.value[i]
-          if (item && item.percentage < 90) {
-            item.percentage += 10
-          }
-        }, 100)
-
-        const response = await mediaFileService.upload(file, currentFolderId.value)
-        files.value.unshift(response.data.data)
-
-        clearInterval(progressInterval)
-        progressItem.percentage = 100
-      } catch (error) {
-        console.error(`Failed to upload file ${file.name}:`, error)
-        progressItem.error = 'Feltöltési hiba'
-        progressItem.percentage = 0
-      }
-    }
-
-    // Wait a bit to show completion
-    await new Promise(resolve => setTimeout(resolve, 500))
-
-    const successCount = uploadProgress.value.filter(p => p.percentage === 100).length
-    if (successCount > 0) {
-      alert(`${successCount} fájl sikeresen feltöltve!`)
-    }
-
-    showUploadDialog.value = false
-    selectedUploadFiles.value = []
-    uploadProgress.value = []
-  } catch (error) {
-    console.error('Failed to upload files:', error)
-    alert('Hiba történt a feltöltés során.')
-  } finally {
-    uploading.value = false
-  }
-}
-
-const cancelUpload = () => {
-  if (!uploading.value) {
-    showUploadDialog.value = false
-    selectedUploadFiles.value = []
-    uploadProgress.value = []
-  }
+const onFileUploaded = (file: MediaFile) => {
+  files.value.unshift(file)
 }
 
 const showFileInfo = (file: MediaFile) => {
@@ -297,7 +163,9 @@ const showFileInfo = (file: MediaFile) => {
         <div class="modal-container">
           <div class="modal-header">
             <h3 class="modal-title">Média Kiválasztása</h3>
-            <button @click="cancelSelection" class="close-button">×</button>
+            <button @click="cancelSelection" class="close-button">
+              <Icon name="close" size="24" />
+            </button>
           </div>
 
           <div class="modal-body">
@@ -311,18 +179,14 @@ const showFileInfo = (file: MediaFile) => {
                   class="search-input"
                 />
               </div>
-              <div class="upload-section">
-                <label class="btn-upload" :class="{ disabled: uploading }">
-                  <input
-                    type="file"
-                    @change="handleFileUpload"
-                    :disabled="uploading"
-                    :accept="acceptTypes.join(',')"
-                    class="file-input-hidden"
-                    multiple
-                  />
-                  {{ uploading ? 'Feltöltés...' : '📤 Új fájl feltöltése' }}
-                </label>
+            <div class="upload-section">
+                <button
+                  @click="showUploadDialog = true"
+                  class="btn-upload"
+                >
+                  <Icon name="upload" size="18" class="inline mr-2" />
+                  Új fájl feltöltése
+                </button>
               </div>
               <div class="folder-navigation">
                 <button
@@ -366,7 +230,7 @@ const showFileInfo = (file: MediaFile) => {
                       class="file-image"
                     />
                     <div v-else class="file-icon">
-                      {{ getFileIcon(file.mime_type) }}
+                      <Icon :name="getFileIcon(file.mime_type)" size="48" color="#6b7280" />
                     </div>
                   </div>
                   <div class="file-info">
@@ -394,63 +258,12 @@ const showFileInfo = (file: MediaFile) => {
       </div>
 
       <!-- Upload Dialog -->
-      <div v-if="showUploadDialog" class="modal-overlay upload-modal-overlay" @click.self="cancelUpload">
-        <div class="upload-modal-container">
-          <div class="modal-header">
-            <h3 class="modal-title">Fájlok Feltöltése</h3>
-            <button @click="cancelUpload" class="close-button" :disabled="uploading">×</button>
-          </div>
-
-          <div class="modal-body">
-            <div class="selected-files-list">
-              <div v-for="(file, index) in selectedUploadFiles" :key="index" class="selected-file-item">
-                <span class="file-name">{{ file.name }}</span>
-                <span class="file-size">{{ formatFileSize(file.size) }}</span>
-                <button
-                  v-if="!uploading"
-                  type="button"
-                  @click="removeUploadFile(index)"
-                  class="btn-remove"
-                >×</button>
-              </div>
-            </div>
-
-            <!-- Progress bars -->
-            <div v-if="uploading && uploadProgress.length > 0" class="upload-progress-container">
-              <div v-for="(progress, index) in uploadProgress" :key="index" class="progress-item">
-                <div class="progress-header">
-                  <span class="progress-filename">{{ progress.filename }}</span>
-                  <span class="progress-percentage">{{ progress.percentage }}%</span>
-                </div>
-                <div class="progress-bar">
-                  <div
-                    class="progress-fill"
-                    :style="{ width: progress.percentage + '%' }"
-                    :class="{
-                      'progress-complete': progress.percentage === 100,
-                      'progress-error': progress.error
-                    }"
-                  ></div>
-                </div>
-                <div v-if="progress.error" class="progress-error-message">{{ progress.error }}</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="modal-footer">
-            <button @click="cancelUpload" :disabled="uploading" class="btn-secondary">
-              {{ uploading ? 'Bezárás' : 'Mégse' }}
-            </button>
-            <button
-              @click="uploadFiles"
-              :disabled="uploading || selectedUploadFiles.length === 0"
-              class="btn-primary"
-            >
-              {{ uploading ? 'Feltöltés...' : 'Feltölt' }}
-            </button>
-          </div>
-        </div>
-      </div>
+      <UploadFile
+        v-model:show="showUploadDialog"
+        :accept-types="acceptTypes"
+        :current-folder-id="currentFolderId"
+        @uploaded="onFileUploaded"
+      />
 
       <!-- File Info Modal -->
       <FileInfoModal v-model="showFileInfoDialog" :file="fileInfoToShow" />
@@ -577,13 +390,55 @@ const showFileInfo = (file: MediaFile) => {
   border: none;
 }
 
-.btn-upload:hover:not(.disabled) {
+.btn-upload:hover:not(:disabled) {
   background: #059669;
 }
 
-.btn-upload.disabled {
+.btn-upload:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.btn-select-files {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-select-files:hover:not(.disabled) {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.btn-select-files.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.separator-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: #9ca3af;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.separator-line {
+  flex: 1;
+  height: 1px;
+  background-color: #e5e7eb;
+}
+
+.separator-text {
+  flex: 0 0 auto;
 }
 
 .file-input-hidden {
@@ -761,6 +616,32 @@ const showFileInfo = (file: MediaFile) => {
   padding: 0.75rem;
   max-height: 200px;
   overflow-y: auto;
+}
+
+.separator {
+  text-align: center;
+  position: relative;
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.separator::before,
+.separator::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 40%;
+  height: 1px;
+  background: #e5e7eb;
+}
+
+.separator::before {
+  left: 0;
+}
+
+.separator::after {
+  right: 0;
 }
 
 .selected-file-item {

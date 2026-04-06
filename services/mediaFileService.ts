@@ -57,6 +57,17 @@ export const mediaFileService = {
       },
     })
   },
+  uploadFromUrl(url: string, folderId?: number | null, description?: string) {
+    const data: any = { url }
+    if (folderId) {
+      data.folder_id = folderId
+    }
+    if (description) {
+      data.description = description
+    }
+
+    return api.post<SingleResponse<MediaFile>>('/api/media/files', data)
+  },
   update(id: number | string, data: MediaFileFormData) {
     return api.put<SingleResponse<MediaFile>>(`/api/media/files/${id}`, data)
   },

@@ -88,6 +88,7 @@
 
 <script setup lang="ts">
 import type { MediaFile } from '../services/mediaFileService'
+import { formatFileSize, isImage, getFileIcon, formatDate } from '../utils/mediaUtils'
 
 interface Props {
   modelValue: boolean
@@ -101,38 +102,6 @@ const emit = defineEmits<{
 
 const close = () => {
   emit('update:modelValue', false)
-}
-
-const isImage = (mimeType: string) => {
-  return mimeType.startsWith('image/')
-}
-
-const getFileIcon = (mimeType: string) => {
-  if (mimeType.startsWith('image/')) return '🖼️'
-  if (mimeType.startsWith('video/')) return '🎥'
-  if (mimeType.startsWith('audio/')) return '🎵'
-  if (mimeType.includes('pdf')) return '📄'
-  return '📎'
-}
-
-const formatFileSize = (bytes: number): string => {
-  if (bytes === 0) return '0 Bytes'
-  const k = 1024
-  const sizes = ['Bytes', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
-}
-
-const formatDate = (dateString: string | undefined) => {
-  if (!dateString) return 'N/A'
-  const date = new Date(dateString)
-  return date.toLocaleString('hu-HU', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
 }
 </script>
 

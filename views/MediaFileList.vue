@@ -72,64 +72,11 @@
     </div>
 
     <!-- Upload Dialog -->
-    <div v-if="showUploadDialog" class="modal-overlay" @click="showUploadDialog = false">
-      <div class="modal-content" @click.stop>
-        <h3>Fájl Feltöltése</h3>
-        <form @submit.prevent="uploadFiles">
-          <div class="form-group">
-            <Label>Fájlok</Label>
-            <input
-              type="file"
-              @change="handleFileSelect"
-              required
-              class="form-control"
-              multiple
-            />
-            <div v-if="selectedFiles.length > 0" class="selected-files-list">
-              <div v-for="(file, index) in selectedFiles" :key="index" class="selected-file-item">
-                <span class="file-name">{{ file.name }}</span>
-                <span class="file-size">{{ formatFileSize(file.size) }}</span>
-                <button type="button" @click="removeFile(index)" class="btn-remove">×</button>
-              </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <Label>Leírás</Label>
-            <Textarea
-              v-model="uploadDescription"
-              placeholder="Opcionális leírás (az összes fájlhoz)"
-              :rows="3"
-            />
-          </div>
-
-          <!-- Progress bars -->
-          <div v-if="uploading && uploadProgress.length > 0" class="upload-progress-container">
-            <div v-for="(progress, index) in uploadProgress" :key="index" class="progress-item">
-              <div class="progress-header">
-                <span class="progress-filename">{{ progress.filename }}</span>
-                <span class="progress-percentage">{{ progress.percentage }}%</span>
-              </div>
-              <div class="progress-bar">
-                <div
-                  class="progress-fill"
-                  :style="{ width: progress.percentage + '%' }"
-                  :class="{
-                    'progress-complete': progress.percentage === 100,
-                    'progress-error': progress.error
-                  }"
-                ></div>
-              </div>
-              <div v-if="progress.error" class="progress-error-message">{{ progress.error }}</div>
-            </div>
-          </div>
-
-          <FormButtons
-            :is-saving="uploading"
-            @cancel="cancelUpload"
-          />
-        </form>
-      </div>
-    </div>
+    <UploadFile
+      v-model:show="showUploadDialog"
+      :current-folder-id="currentFolderId"
+      @uploaded="onFileUploaded"
+    />
 
     <!-- Folder Create/Edit Dialog -->
     <div v-if="showCreateFolderDialog || showEditFolderDialog" class="modal-overlay" @click="closeFolderDialogs">
@@ -224,17 +171,16 @@ import FormButtons from '@admin/components/ui/button/FormButtons.vue'
 import FolderTree from '../components/FolderTree.vue'
 import FileInfoButton from '../components/FileInfoButton.vue'
 import FileInfoModal from '../components/FileInfoModal.vue'
+import UploadFile from '../components/UploadFile.vue'
 import { mediaFileService, type MediaFile } from '../services/mediaFileService'
 import { mediaFolderService, type MediaFolder, type MediaFolderFormData } from '../services/mediaFolderService'
+import { formatFileSize, isImage } from '../utils/mediaUtils'
 
 const files = ref<MediaFile[]>([])
 const folders = ref<MediaFolder[]>([])
 const loading = ref(false)
 const foldersLoading = ref(false)
 const showUploadDialog = ref(false)
-const selectedFiles = ref<File[]>([])
-const uploadDescription = ref('')
-const uploading = ref(false)
 const currentFolderId = ref<number | null>(null)
 const currentFolderName = ref('')
 const showDeleteDialog = ref(false)
@@ -242,15 +188,6 @@ const fileToDelete = ref<MediaFile | null>(null)
 const showFileInfoDialog = ref(false)
 const fileInfoToShow = ref<MediaFile | null>(null)
 
-interface UploadProgress {
-  filename: string
-  percentage: number
-  error?: string
-}
-const uploadProgress = ref<UploadProgress[]>([])
-const showCreateFolderDialog = ref(false)
-const showEditFolderDialog = ref(false)
-const showDeleteFolderDialog = ref(false)
 const editingFolder = ref<MediaFolder | null>(null)
 const folderToDelete = ref<MediaFolder | null>(null)
 const saving = ref(false)
@@ -298,84 +235,8 @@ const navigateToFolder = async (folderId: number | null) => {
   loadFiles()
 }
 
-const handleFileSelect = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  if (target.files && target.files.length > 0) {
-    selectedFiles.value = Array.from(target.files)
-  }
-}
-
-const removeFile = (index: number) => {
-  selectedFiles.value.splice(index, 1)
-}
-
-const uploadFiles = async () => {
-  if (selectedFiles.value.length === 0) return
-
-  uploading.value = true
-  uploadProgress.value = selectedFiles.value.map(file => ({
-    filename: file.name,
-    percentage: 0
-  }))
-
-  try {
-    // Upload files sequentially to track individual progress
-    for (let i = 0; i < selectedFiles.value.length; i++) {
-      const file = selectedFiles.value[i]
-      if (!file) continue
-
-      const progressItem = uploadProgress.value[i]
-      if (!progressItem) continue
-
-      try {
-        progressItem.percentage = 0
-
-        // Simulate progress (you can enhance this with actual XHR progress events)
-        const progressInterval = setInterval(() => {
-          const item = uploadProgress.value[i]
-          if (item && item.percentage < 90) {
-            item.percentage += 10
-          }
-        }, 100)
-
-        await mediaFileService.upload(
-          file,
-          currentFolderId.value,
-          uploadDescription.value
-        )
-
-        clearInterval(progressInterval)
-        progressItem.percentage = 100
-      } catch (error) {
-        console.error(`Failed to upload file ${file.name}:`, error)
-        progressItem.error = 'Feltöltési hiba'
-        progressItem.percentage = 0
-      }
-    }
-
-    // Wait a bit to show completion
-    await new Promise(resolve => setTimeout(resolve, 500))
-
-    showUploadDialog.value = false
-    selectedFiles.value = []
-    uploadDescription.value = ''
-    uploadProgress.value = []
-    await loadFiles()
-  } catch (error) {
-    console.error('Failed to upload files:', error)
-    alert('Hiba történt a feltöltés során')
-  } finally {
-    uploading.value = false
-  }
-}
-
-const cancelUpload = () => {
-  if (!uploading.value) {
-    showUploadDialog.value = false
-    selectedFiles.value = []
-    uploadDescription.value = ''
-    uploadProgress.value = []
-  }
+const onFileUploaded = () => {
+  loadFiles()
 }
 
 const confirmDelete = (file: MediaFile) => {
@@ -469,18 +330,6 @@ const closeFolderDialogs = () => {
     parent_id: null,
     path: ''
   }
-}
-
-const isImage = (mimeType: string) => {
-  return mimeType.startsWith('image/')
-}
-
-const formatFileSize = (bytes: number): string => {
-  if (bytes === 0) return '0 Bytes'
-  const k = 1024
-  const sizes = ['Bytes', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
 }
 
 const showFileInfo = (file: MediaFile) => {
@@ -665,6 +514,33 @@ onMounted(() => {
   padding: 8px 12px;
   border: 1px solid #ddd;
   border-radius: 4px;
+}
+
+.separator {
+  text-align: center;
+  margin: 16px 0;
+  position: relative;
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.separator::before,
+.separator::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 40%;
+  height: 1px;
+  background: #e5e7eb;
+}
+
+.separator::before {
+  left: 0;
+}
+
+.separator::after {
+  right: 0;
 }
 
 .form-actions {
