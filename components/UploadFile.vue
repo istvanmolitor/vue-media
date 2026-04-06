@@ -6,19 +6,16 @@ import { mediaFileService, type MediaFile } from '../services/mediaFileService'
 import { formatFileSize } from '../utils/mediaUtils'
 
 interface Props {
-  show: boolean
   acceptTypes?: string[]
   currentFolderId?: number | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  show: false,
   acceptTypes: () => [],
   currentFolderId: null
 })
 
 const emit = defineEmits<{
-  'update:show': [value: boolean]
   'uploaded': [file: MediaFile]
   'close': []
 }>()
@@ -144,7 +141,6 @@ const uploadFiles = async () => {
 
 const close = () => {
   if (!uploading.value) {
-    emit('update:show', false)
     emit('close')
     selectedUploadFiles.value = []
     uploadUrl.value = ''
@@ -154,156 +150,104 @@ const close = () => {
 </script>
 
 <template>
-  <div v-if="show" class="modal-overlay upload-modal-overlay" @click.self="close">
-    <div class="upload-modal-container">
-      <div class="modal-header">
-        <h3 class="modal-title">Fájlok Feltöltése</h3>
-        <Button @click="close" variant="ghost" size="icon" class="close-button" :disabled="uploading">
-          <Icon name="close" size="24" />
-        </Button>
-      </div>
-
-      <div class="modal-body">
-        <div class="form-group mb-4" v-if="!uploading">
-          <label class="block text-sm font-medium mb-1">Média URL letöltése</label>
-          <div class="flex gap-2">
-            <input
-              v-model="uploadUrl"
-              type="text"
-              placeholder="https://example.com/image.jpg"
-              class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-              :disabled="selectedUploadFiles.length > 0"
-            />
-          </div>
-        </div>
-
-        <div class="separator-container mb-4" v-if="!uploading && !uploadUrl && selectedUploadFiles.length === 0">
-          <div class="separator-line"></div>
-          <div class="separator-text">VAGY</div>
-          <div class="separator-line"></div>
-        </div>
-
-        <div class="form-group mb-4" v-if="!uploading && !uploadUrl">
-          <label class="block text-sm font-medium mb-1">Fájlok kiválasztása</label>
-          <label class="btn-select-files" :class="{ disabled: uploading }">
-            <input
-              type="file"
-              @change="handleFileUpload"
-              :disabled="uploading"
-              :accept="acceptTypes.join(',')"
-              class="file-input-hidden"
-              multiple
-            />
-            <Icon name="folder" size="18" class="inline mr-2" /> Tallózás...
-          </label>
-        </div>
-
-        <div class="selected-files-list" v-if="selectedUploadFiles.length > 0">
-          <div v-for="(file, index) in selectedUploadFiles" :key="index" class="selected-file-item">
-            <span class="file-name">{{ file.name }}</span>
-            <span class="file-size">{{ formatFileSize(file.size) }}</span>
-            <Button
-              v-if="!uploading"
-              type="button"
-              @click="removeUploadFile(index)"
-              variant="destructive"
-              size="icon-sm"
-              class="rounded-full"
-            >
-              <Icon name="close" size="16" />
-            </Button>
-          </div>
-        </div>
-
-        <!-- Progress bars -->
-        <div v-if="uploading && uploadProgress.length > 0" class="upload-progress-container">
-          <div v-for="(progress, index) in uploadProgress" :key="index" class="progress-item">
-            <div class="progress-header">
-              <span class="progress-filename">{{ progress.filename }}</span>
-              <span class="progress-percentage">{{ progress.percentage }}%</span>
-            </div>
-            <div class="progress-bar">
-              <div
-                class="progress-fill"
-                :style="{ width: progress.percentage + '%' }"
-                :class="{
-                  'progress-complete': progress.percentage === 100,
-                  'progress-error': progress.error
-                }"
-              ></div>
-            </div>
-            <div v-if="progress.error" class="progress-error-message">{{ progress.error }}</div>
-          </div>
+  <div class="upload-container">
+    <div class="upload-body">
+      <div class="form-group mb-4" v-if="!uploading">
+        <label class="block text-sm font-medium mb-1">Média URL letöltése</label>
+        <div class="flex gap-2">
+          <input
+            v-model="uploadUrl"
+            type="text"
+            placeholder="https://example.com/image.jpg"
+            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+            :disabled="selectedUploadFiles.length > 0"
+          />
         </div>
       </div>
 
-      <div class="modal-footer">
-        <Button @click="close" :disabled="uploading" variant="outline">
-          {{ uploading ? 'Bezárás' : 'Mégse' }}
-        </Button>
-        <Button
-          @click="uploadFiles"
-          :disabled="uploading || (selectedUploadFiles.length === 0 && !uploadUrl)"
-          variant="primary"
-        >
-          {{ uploading ? 'Feltöltés...' : 'Feltölt' }}
-        </Button>
+      <div class="separator-container mb-4" v-if="!uploading && !uploadUrl && selectedUploadFiles.length === 0">
+        <div class="separator-line"></div>
+        <div class="separator-text">VAGY</div>
+        <div class="separator-line"></div>
       </div>
+
+      <div class="form-group mb-4" v-if="!uploading && !uploadUrl">
+        <label class="block text-sm font-medium mb-1">Fájlok kiválasztása</label>
+        <label class="btn-select-files" :class="{ disabled: uploading }">
+          <input
+            type="file"
+            @change="handleFileUpload"
+            :disabled="uploading"
+            :accept="acceptTypes.join(',')"
+            class="file-input-hidden"
+            multiple
+          />
+          <Icon name="folder" size="18" class="inline mr-2" /> Tallózás...
+        </label>
+      </div>
+
+      <div class="selected-files-list" v-if="selectedUploadFiles.length > 0">
+        <div v-for="(file, index) in selectedUploadFiles" :key="index" class="selected-file-item">
+          <span class="file-name">{{ file.name }}</span>
+          <span class="file-size">{{ formatFileSize(file.size) }}</span>
+          <Button
+            v-if="!uploading"
+            type="button"
+            @click="removeUploadFile(index)"
+            variant="destructive"
+            size="icon-sm"
+            class="rounded-full"
+          >
+            <Icon name="close" size="16" />
+          </Button>
+        </div>
+      </div>
+
+      <!-- Progress bars -->
+      <div v-if="uploading && uploadProgress.length > 0" class="upload-progress-container">
+        <div v-for="(progress, index) in uploadProgress" :key="index" class="progress-item">
+          <div class="progress-header">
+            <span class="progress-filename">{{ progress.filename }}</span>
+            <span class="progress-percentage">{{ progress.percentage }}%</span>
+          </div>
+          <div class="progress-bar">
+            <div
+              class="progress-fill"
+              :style="{ width: progress.percentage + '%' }"
+              :class="{
+                'progress-complete': progress.percentage === 100,
+                'progress-error': progress.error
+              }"
+            ></div>
+          </div>
+          <div v-if="progress.error" class="progress-error-message">{{ progress.error }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="upload-footer mt-6">
+      <Button @click="close" :disabled="uploading" variant="outline">
+        {{ uploading ? 'Bezárás' : 'Mégse' }}
+      </Button>
+      <Button
+        @click="uploadFiles"
+        :disabled="uploading || (selectedUploadFiles.length === 0 && !uploadUrl)"
+        variant="primary"
+      >
+        {{ uploading ? 'Feltöltés...' : 'Feltölt' }}
+      </Button>
     </div>
   </div>
 </template>
 
 <style scoped>
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+.upload-container {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
+  flex-direction: column;
 }
 
-.modal-header {
-  padding: 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.modal-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin: 0;
-}
-
-.close-button {
-  background: none;
-  border: none;
-  font-size: 2rem;
-  cursor: pointer;
-  color: #6b7280;
-  padding: 0;
-  width: 2rem;
-  height: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-}
-
-.close-button:hover {
-  background: #f3f4f6;
-}
-
-.modal-body {
+.upload-body {
   flex: 1;
-  overflow-y: auto;
-  padding: 1.5rem;
 }
 
 .btn-select-files {
@@ -352,63 +296,14 @@ const close = () => {
   display: none;
 }
 
-.modal-footer {
-  padding: 1.5rem;
+.upload-footer {
+  padding-top: 1rem;
   border-top: 1px solid #e5e7eb;
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
 }
 
-.btn-secondary,
-.btn-primary {
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: none;
-}
-
-.btn-secondary {
-  background: white;
-  border: 1px solid #d1d5db;
-  color: #374151;
-}
-
-.btn-secondary:hover {
-  background: #f9fafb;
-}
-
-.btn-primary {
-  background: #3b82f6;
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: #2563eb;
-}
-
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.upload-modal-overlay {
-  z-index: 10000;
-}
-
-.upload-modal-container {
-  background: white;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 600px;
-  max-height: 80vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-}
 
 .selected-files-list {
   margin-bottom: 1.5rem;
@@ -448,21 +343,6 @@ const close = () => {
   margin-right: 1rem;
 }
 
-.btn-remove {
-  background: none;
-  border: none;
-  color: #ef4444;
-  cursor: pointer;
-  padding: 0.25rem;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.btn-remove:hover {
-  background: #fee2e2;
-}
 
 .upload-progress-container {
   margin-top: 1rem;

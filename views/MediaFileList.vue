@@ -72,11 +72,21 @@
     </div>
 
     <!-- Upload Dialog -->
-    <UploadFile
-      v-model:show="showUploadDialog"
-      :current-folder-id="currentFolderId"
-      @uploaded="onFileUploaded"
-    />
+    <Modal
+      :show="showUploadDialog"
+      title="Fájlok Feltöltése"
+      @close="showUploadDialog = false"
+    >
+      <UploadFile
+        :current-folder-id="currentFolderId"
+        @uploaded="onFileUploaded"
+        @close="showUploadDialog = false"
+      />
+      <template #footer>
+        <!-- A footer gombokat az UploadFile komponens tartalmazza -->
+        <div></div>
+      </template>
+    </Modal>
 
     <!-- Folder Create/Edit Dialog -->
     <div v-if="showCreateFolderDialog || showEditFolderDialog" class="modal-overlay" @click="closeFolderDialogs">

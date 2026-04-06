@@ -228,12 +228,26 @@ const showFileInfo = (file: MediaFile) => {
       </div>
 
       <!-- Upload Dialog -->
-      <UploadFile
-        v-model:show="showUploadDialog"
-        :accept-types="acceptTypes"
-        :current-folder-id="currentFolderId"
-        @uploaded="onFileUploaded"
-      />
+      <Teleport to="body">
+        <div v-if="showUploadDialog" class="modal-overlay upload-modal-overlay" @click.self="showUploadDialog = false">
+          <div class="upload-modal-container">
+            <div class="modal-header">
+              <h3 class="modal-title">Fájlok Feltöltése</h3>
+              <Button @click="showUploadDialog = false" variant="ghost" size="icon" class="close-button">
+                <Icon name="close" size="24" />
+              </Button>
+            </div>
+            <div class="modal-body p-6">
+              <UploadFile
+                :accept-types="acceptTypes"
+                :current-folder-id="currentFolderId"
+                @uploaded="onFileUploaded"
+                @close="showUploadDialog = false"
+              />
+            </div>
+          </div>
+        </div>
+      </Teleport>
 
       <!-- File Info Modal -->
       <FileInfoModal v-model="showFileInfoDialog" :file="fileInfoToShow" />
@@ -635,6 +649,25 @@ const showFileInfo = (file: MediaFile) => {
   margin-top: 0.25rem;
   font-size: 0.75rem;
   color: #ef4444;
+}
+.upload-modal-overlay {
+  z-index: 10000;
+}
+
+.upload-modal-container {
+  background: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.modal-body.p-6 {
+  padding: 1.5rem;
+  overflow-y: auto;
 }
 </style>
 
