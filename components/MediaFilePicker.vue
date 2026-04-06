@@ -7,6 +7,7 @@ import { mediaFolderService, type MediaFolder } from '../services/mediaFolderSer
 import FileInfoModal from './FileInfoModal.vue'
 import UploadFile from './UploadFile.vue'
 import MediaFilesGrid from './MediaFilesGrid.vue'
+import FolderTree from './FolderTree.vue'
 
 interface Props {
   modelValue?: string
@@ -169,57 +170,46 @@ const showFileInfo = (file: MediaFile) => {
             </Button>
           </div>
 
-          <div class="modal-body">
-            <!-- Search and Folder Navigation -->
-            <div class="toolbar">
-              <div class="search-box">
-                <input
-                  v-model="searchQuery"
-                  type="text"
-                  placeholder="Keresés..."
-                  class="search-input"
-                />
-              </div>
-            <div class="upload-section">
-                <Button
-                  @click="showUploadDialog = true"
-                  variant="primary"
-                  class="btn-upload w-full"
-                >
-                  <Icon name="upload" size="18" class="inline mr-2" />
-                  Új fájl feltöltése
-                </Button>
-              </div>
-              <div class="folder-navigation">
-                <Button
-                  @click="selectFolder(null)"
-                  :variant="currentFolderId === null ? 'primary' : 'outline'"
-                  size="sm"
-                  class="folder-button"
-                >
-                  Gyökér
-                </Button>
-                <Button
-                  v-for="folder in folders"
-                  :key="folder.id"
-                  @click="selectFolder(folder.id!)"
-                  :variant="currentFolderId === folder.id ? 'primary' : 'outline'"
-                  size="sm"
-                  class="folder-button"
-                >
-                  {{ folder.name }}
-                </Button>
-              </div>
+          <div class="modal-body-container">
+            <div class="sidebar">
+              <FolderTree
+                :folders="folders"
+                :selected-folder-id="currentFolderId"
+                @select-folder="selectFolder"
+              />
             </div>
+            <div class="modal-body">
+              <!-- Search and Folder Navigation -->
+              <div class="toolbar">
+                <div class="search-box">
+                  <input
+                    v-model="searchQuery"
+                    type="text"
+                    placeholder="Keresés..."
+                    class="search-input"
+                  />
+                </div>
+                <div class="upload-section">
+                  <Button
+                    @click="showUploadDialog = true"
+                    variant="primary"
+                    class="btn-upload w-full"
+                  >
+                    <Icon name="upload" size="18" class="inline mr-2" />
+                    Új fájl feltöltése
+                  </Button>
+                </div>
+              </div>
 
-            <!-- Files Grid -->
-            <MediaFilesGrid
-              :files="filteredFiles"
-              :loading="loading"
-              :selected-file-id="selectedFile?.id"
-              @select="selectFile"
-              @show-info="showFileInfo"
-            />
+              <!-- Files Grid -->
+              <MediaFilesGrid
+                :files="filteredFiles"
+                :loading="loading"
+                :selected-file-id="selectedFile?.id"
+                @select="selectFile"
+                @show-info="showFileInfo"
+              />
+            </div>
           </div>
 
           <div class="modal-footer">
@@ -320,6 +310,20 @@ const showFileInfo = (file: MediaFile) => {
 
 .close-button:hover {
   background: #f3f4f6;
+}
+
+.modal-body-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 250px;
+  border-right: 1px solid #e5e7eb;
+  background: #f9fafb;
+  overflow-y: auto;
+  flex-shrink: 0;
 }
 
 .modal-body {
@@ -425,32 +429,6 @@ const showFileInfo = (file: MediaFile) => {
   display: none;
 }
 
-.folder-navigation {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.folder-button {
-  padding: 0.5rem 1rem;
-  border: 1px solid #d1d5db;
-  background: white;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.folder-button:hover {
-  border-color: #3b82f6;
-  background: #eff6ff;
-}
-
-.folder-button.active {
-  background: #3b82f6;
-  color: white;
-  border-color: #3b82f6;
-}
 
 .modal-footer {
   padding: 1.5rem;
