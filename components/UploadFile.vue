@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import Button from '@admin/components/ui/button/Button.vue'
 import Icon from '@admin/components/ui/Icon.vue'
 import { mediaFileService, type MediaFile } from '../services/mediaFileService'
 import { formatFileSize } from '../utils/mediaUtils'
@@ -157,9 +158,9 @@ const close = () => {
     <div class="upload-modal-container">
       <div class="modal-header">
         <h3 class="modal-title">Fájlok Feltöltése</h3>
-        <button @click="close" class="close-button" :disabled="uploading">
+        <Button @click="close" variant="ghost" size="icon" class="close-button" :disabled="uploading">
           <Icon name="close" size="24" />
-        </button>
+        </Button>
       </div>
 
       <div class="modal-body">
@@ -201,14 +202,16 @@ const close = () => {
           <div v-for="(file, index) in selectedUploadFiles" :key="index" class="selected-file-item">
             <span class="file-name">{{ file.name }}</span>
             <span class="file-size">{{ formatFileSize(file.size) }}</span>
-            <button
+            <Button
               v-if="!uploading"
               type="button"
               @click="removeUploadFile(index)"
-              class="btn-remove"
+              variant="destructive"
+              size="icon-sm"
+              class="rounded-full"
             >
               <Icon name="close" size="16" />
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -235,16 +238,16 @@ const close = () => {
       </div>
 
       <div class="modal-footer">
-        <button @click="close" :disabled="uploading" class="btn-secondary">
+        <Button @click="close" :disabled="uploading" variant="outline">
           {{ uploading ? 'Bezárás' : 'Mégse' }}
-        </button>
-        <button
+        </Button>
+        <Button
           @click="uploadFiles"
           :disabled="uploading || (selectedUploadFiles.length === 0 && !uploadUrl)"
-          class="btn-primary"
+          variant="primary"
         >
           {{ uploading ? 'Feltöltés...' : 'Feltölt' }}
-        </button>
+        </Button>
       </div>
     </div>
   </div>

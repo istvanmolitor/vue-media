@@ -6,25 +6,27 @@
       :style="{ paddingLeft: `${depth * 12 + 12}px` }"
       @click.stop="handleSelect"
     >
-      <button
+      <Button
         v-if="hasChildren"
-        class="expand-btn"
+        variant="ghost"
+        size="icon-sm"
+        class="expand-btn h-5 w-5 p-0"
         @click.stop="toggleExpand"
       >
         <Icon :name="isExpanded ? 'chevron-down' : 'chevron-right'" :size="14" />
-      </button>
+      </Button>
       <span v-else class="expand-placeholder"></span>
 
       <Icon name="folder" :size="16" class="mr-2 folder-icon" />
       <span class="folder-name">{{ folder.name }}</span>
 
       <div class="node-actions" @click.stop>
-        <button class="action-btn" @click="$emit('edit-folder', folder)" title="Szerkesztés">
+        <Button variant="ghost" size="icon-sm" class="action-btn" @click="$emit('edit-folder', folder)" title="Szerkesztés">
           <Icon name="edit" :size="14" />
-        </button>
-        <button class="action-btn delete-btn" @click="$emit('delete-folder', folder.id!)" title="Törlés">
+        </Button>
+        <Button variant="ghost" size="icon-sm" class="action-btn delete-btn" @click="$emit('delete-folder', folder.id!)" title="Törlés">
           <Icon name="trash" :size="14" />
-        </button>
+        </Button>
       </div>
     </div>
 
@@ -46,6 +48,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import Button from '@admin/components/ui/button/Button.vue'
 import Icon from '@admin/components/ui/Icon.vue'
 import type { MediaFolder } from '../services/mediaFolderService'
 

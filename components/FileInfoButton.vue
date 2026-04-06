@@ -1,14 +1,17 @@
 <template>
-  <button
+  <Button
     @click="handleClick"
-    class="file-info-button"
+    variant="ghost"
+    size="icon-sm"
+    class="file-info-button rounded-full"
     title="Részletek"
   >
     <Icon name="info" :size="16" />
-  </button>
+  </Button>
 </template>
 
 <script setup lang="ts">
+import Button from '@admin/components/ui/button/Button.vue'
 import Icon from '@admin/components/ui/Icon.vue'
 import type { MediaFile } from '../services/mediaFileService'
 

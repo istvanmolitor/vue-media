@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import Button from '@admin/components/ui/button/Button.vue'
 import Icon from '@admin/components/ui/Icon.vue'
 import { mediaFileService, type MediaFile } from '../services/mediaFileService'
 import { mediaFolderService, type MediaFolder } from '../services/mediaFolderService'
@@ -138,13 +139,14 @@ const showFileInfo = (file: MediaFile) => {
         class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
         placeholder="Válassz egy fájlt..."
       />
-      <button
+      <Button
         @click="openPicker"
         type="button"
-        class="ml-2 inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+        variant="primary"
+        class="ml-2"
       >
         Tallózás
-      </button>
+      </Button>
     </div>
 
     <div v-if="showPreview && modelValue" class="preview mt-4">
@@ -162,9 +164,9 @@ const showFileInfo = (file: MediaFile) => {
         <div class="modal-container">
           <div class="modal-header">
             <h3 class="modal-title">Média Kiválasztása</h3>
-            <button @click="cancelSelection" class="close-button">
+            <Button @click="cancelSelection" variant="ghost" size="icon" class="close-button">
               <Icon name="close" size="24" />
-            </button>
+            </Button>
           </div>
 
           <div class="modal-body">
@@ -179,29 +181,34 @@ const showFileInfo = (file: MediaFile) => {
                 />
               </div>
             <div class="upload-section">
-                <button
+                <Button
                   @click="showUploadDialog = true"
-                  class="btn-upload"
+                  variant="primary"
+                  class="btn-upload w-full"
                 >
                   <Icon name="upload" size="18" class="inline mr-2" />
                   Új fájl feltöltése
-                </button>
+                </Button>
               </div>
               <div class="folder-navigation">
-                <button
+                <Button
                   @click="selectFolder(null)"
-                  :class="['folder-button', { active: currentFolderId === null }]"
+                  :variant="currentFolderId === null ? 'primary' : 'outline'"
+                  size="sm"
+                  class="folder-button"
                 >
                   Gyökér
-                </button>
-                <button
+                </Button>
+                <Button
                   v-for="folder in folders"
                   :key="folder.id"
                   @click="selectFolder(folder.id!)"
-                  :class="['folder-button', { active: currentFolderId === folder.id }]"
+                  :variant="currentFolderId === folder.id ? 'primary' : 'outline'"
+                  size="sm"
+                  class="folder-button"
                 >
                   {{ folder.name }}
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -216,16 +223,16 @@ const showFileInfo = (file: MediaFile) => {
           </div>
 
           <div class="modal-footer">
-            <button @click="cancelSelection" class="btn-secondary">
+            <Button @click="cancelSelection" variant="outline">
               Mégse
-            </button>
-            <button
+            </Button>
+            <Button
               @click="confirmSelection"
               :disabled="!selectedFile"
-              class="btn-primary"
+              variant="primary"
             >
               Kiválaszt
-            </button>
+            </Button>
           </div>
         </div>
       </div>

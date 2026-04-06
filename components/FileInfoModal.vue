@@ -4,7 +4,9 @@
       <div class="file-info-modal-container">
         <div class="modal-header">
           <h3 class="modal-title">Fájl Információk</h3>
-          <button @click="close" class="close-button">×</button>
+          <Button @click="close" variant="ghost" size="icon" class="close-button">
+            <Icon name="close" size="24" />
+          </Button>
         </div>
 
         <div class="modal-body">
@@ -77,9 +79,9 @@
         </div>
 
         <div class="modal-footer">
-          <button @click="close" class="btn-primary">
+          <Button @click="close" variant="primary">
             Bezárás
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -88,6 +90,8 @@
 
 <script setup lang="ts">
 import type { MediaFile } from '../services/mediaFileService'
+import Button from '@admin/components/ui/button/Button.vue'
+import Icon from '@admin/components/ui/Icon.vue'
 import { formatFileSize, isImage, getFileIcon, formatDate } from '../utils/mediaUtils'
 
 interface Props {
