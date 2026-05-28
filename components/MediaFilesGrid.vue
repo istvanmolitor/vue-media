@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import Icon from '@admin/components/ui/Icon.vue'
+import LoadingSpinner from '@admin/components/ui/LoadingSpinner.vue'
 import { type MediaFile } from '../services/mediaFileService'
 import { formatFileSize, isImage, getFileIcon } from '../utils/mediaUtils'
 import FileInfoButton from './FileInfoButton.vue'
@@ -28,9 +29,7 @@ const showFileInfo = (file: MediaFile) => {
 
 <template>
   <div class="files-section">
-    <div v-if="loading" class="loading-state">
-      Betöltés...
-    </div>
+    <div v-if="loading" class="loading-state"><LoadingSpinner label="Betöltés..." /></div>
     <div v-else-if="files.length === 0" class="empty-state">
       Nincsenek fájlok
     </div>

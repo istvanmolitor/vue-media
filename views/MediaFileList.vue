@@ -31,7 +31,7 @@
 
         <!-- Files List -->
         <div class="files-section">
-          <div v-if="loading" class="loading">Betöltés...</div>
+          <div v-if="loading" class="loading"><LoadingSpinner label="Betöltés..." /></div>
           <div v-else-if="files.length === 0" class="empty-state">
             Nincsenek fájlok
           </div>
@@ -178,6 +178,7 @@ import Input from '@admin/components/ui/Input.vue'
 import Label from '@admin/components/ui/Label.vue'
 import Textarea from '@admin/components/ui/Textarea.vue'
 import FormButtons from '@admin/components/ui/button/FormButtons.vue'
+import LoadingSpinner from '@admin/components/ui/LoadingSpinner.vue'
 import FolderTree from '../components/FolderTree.vue'
 import FileInfoButton from '../components/FileInfoButton.vue'
 import FileInfoModal from '../components/FileInfoModal.vue'

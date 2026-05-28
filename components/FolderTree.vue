@@ -8,9 +8,7 @@
       </Button>
     </div>
 
-    <div v-if="loading" class="loading">
-      Betöltés...
-    </div>
+    <div v-if="loading" class="loading"><LoadingSpinner label="Betöltés..." /></div>
 
     <div v-else class="tree-content">
       <!-- Root level (no folder selected) -->
@@ -42,6 +40,7 @@
 import { computed } from 'vue'
 import Button from '@admin/components/ui/button/Button.vue'
 import Icon from '@admin/components/ui/Icon.vue'
+import LoadingSpinner from '@admin/components/ui/LoadingSpinner.vue'
 import type { MediaFolder } from '../services/mediaFolderService'
 
 // FolderTreeNode will be resolved automatically from the same directory
