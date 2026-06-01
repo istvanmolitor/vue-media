@@ -26,6 +26,7 @@ export class MediaMenuBuilder extends MenuBuilder {
       path: '/admin/media',
       icon: FolderOpen,
       order: 50,
+      permission: 'media',
     }
 
     this.addMenuItem(menu, mediaItem)
