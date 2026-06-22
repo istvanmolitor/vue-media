@@ -116,7 +116,6 @@ const folderForm = ref<MediaFolderFormData>({
 })
 
 const columns: Column<MediaFolder>[] = [
-  { key: 'id', label: 'ID', sortable: true, width: '80px' },
   { key: 'name', label: 'Név', sortable: true },
   { key: 'description', label: 'Leírás', sortable: false },
   { key: 'parent', label: 'Szülő Mappa', sortable: false, width: '200px' },
