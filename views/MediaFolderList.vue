@@ -115,12 +115,7 @@ const folderForm = ref<MediaFolderFormData>({
   path: ''
 })
 
-const columns: Column<MediaFolder>[] = [
-  { key: 'name', label: 'Név', sortable: true },
-  { key: 'description', label: 'Leírás', sortable: false },
-  { key: 'parent', label: 'Szülő Mappa', sortable: false, width: '200px' },
-  { key: 'path', label: 'Útvonal', sortable: false },
-]
+const columns = ref<Column[]>([])
 
 const availableFolders = computed(() => {
   return folders.value.filter(f => {
@@ -134,6 +129,7 @@ const fetchFolders = async () => {
     isLoading.value = true
     const response = await mediaFolderService.getAll()
     folders.value = response.data.data
+    columns.value = (response.data.columns ?? []) as Column[]
   } catch (error) {
     console.error('Hiba a mappák betöltésekor:', error)
   } finally {
