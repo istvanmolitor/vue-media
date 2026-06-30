@@ -2,10 +2,16 @@
   <div class="folder-tree">
     <div class="tree-header">
       <h3 class="text-lg font-semibold mb-4">Mappák</h3>
-      <Button size="sm" @click="$emit('create-folder')">
-        <Icon name="plus" :size="14" class="mr-1" />
-        Új Mappa
-      </Button>
+      <div class="flex gap-2">
+        <Button size="sm" @click="$emit('create-folder')">
+          <Icon name="plus" :size="14" />
+          Új Mappa
+        </Button>
+        <Button size="sm" variant="primary" @click="$emit('upload-file')">
+          <Icon name="upload" :size="14" />
+          Feltöltés
+        </Button>
+      </div>
     </div>
 
     <div v-if="loading" class="loading"><LoadingSpinner label="Betöltés..." /></div>
@@ -59,6 +65,7 @@ const props = withDefaults(defineProps<Props>(), {
 defineEmits<{
   'select-folder': [folderId: number | null]
   'create-folder': []
+  'upload-file': []
   'edit-folder': [folder: MediaFolder]
   'delete-folder': [folderId: number]
 }>()

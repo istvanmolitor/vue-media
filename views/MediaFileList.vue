@@ -9,6 +9,7 @@
           :loading="foldersLoading"
           @select-folder="navigateToFolder"
           @create-folder="showCreateFolderDialog = true"
+          @upload-file="showUploadDialog = true"
           @edit-folder="editFolder"
           @delete-folder="confirmDeleteFolder"
         />
@@ -20,12 +21,6 @@
           <div class="header-title">
             <h2>{{ currentFolderName || 'Gyökér' }}</h2>
             <span v-if="files.length > 0" class="file-count">{{ files.length }} fájl</span>
-          </div>
-          <div class="actions">
-            <button @click="showUploadDialog = true" class="btn btn-primary">
-              <Icon name="upload" :size="16" class="mr-2" />
-              Fájl Feltöltése
-            </button>
           </div>
         </div>
 
