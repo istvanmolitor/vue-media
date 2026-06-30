@@ -4,6 +4,7 @@ import Button from '@admin/components/ui/button/Button.vue'
 import Icon from '@admin/components/ui/Icon.vue'
 import { mediaFileService, type MediaFile } from '../services/mediaFileService'
 import { formatFileSize } from '../utils/mediaUtils'
+import { toastService } from '@admin/lib/toastService'
 
 interface Props {
   acceptTypes?: string[]
@@ -126,14 +127,14 @@ const uploadFiles = async () => {
     await new Promise(resolve => setTimeout(resolve, 500))
 
     const successCount = uploadProgress.value.filter(p => p.percentage === 100).length
+    uploading.value = false
     if (successCount > 0) {
-      alert(`${successCount} fájl sikeresen feldolgozva!`)
+      toastService.success(`${successCount} fájl sikeresen feltöltve!`)
     }
-
     close()
   } catch (error) {
     console.error('Failed to upload:', error)
-    alert('Hiba történt a művelet során.')
+    toastService.error('Hiba történt a feltöltés során.')
   } finally {
     uploading.value = false
   }

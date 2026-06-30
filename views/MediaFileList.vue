@@ -186,6 +186,7 @@ import UploadFile from '../components/UploadFile.vue'
 import { mediaFileService, type MediaFile } from '../services/mediaFileService'
 import { mediaFolderService, type MediaFolder, type MediaFolderFormData } from '../services/mediaFolderService'
 import { formatFileSize, isImage } from '../utils/mediaUtils'
+import { toastService } from '@admin/lib/toastService'
 
 const files = ref<MediaFile[]>([])
 const folders = ref<MediaFolder[]>([])
@@ -264,11 +265,13 @@ const deleteFile = async () => {
   try {
     await mediaFileService.delete(fileToDelete.value.id!)
     await loadFiles()
+    toastService.success('A fájl sikeresen törölve!')
   } catch (error) {
     console.error('Failed to delete file:', error)
-    alert('Failed to delete file')
+    toastService.error('Hiba történt a fájl törlése közben.')
   } finally {
     fileToDelete.value = null
+    showDeleteDialog.value = false
   }
 }
 
